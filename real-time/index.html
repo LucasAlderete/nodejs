@@ -1,0 +1,18 @@
+<html>
+    <head>
+    </head>
+    <body>
+        <h1>Hola socket.io</h1>
+
+        <div>
+            Usuarios conectados: <span id="count"></span>
+        </div>
+    </body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io.connect();
+        socket.on("count_updated",function(data){
+            document.querySelector("#count").innerHTML = data.count;
+        })
+    </script>
+</html>

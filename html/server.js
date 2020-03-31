@@ -1,7 +1,10 @@
 const express = require("express");
 const app = express();
 
-app.use('/assets', express.static("assets"));
+app.use('/assets', express.static("assets",{
+    etag: false,
+    maxAge: '5h'
+}));
 
 app.set("view engine","ejs");
 
