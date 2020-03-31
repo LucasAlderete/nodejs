@@ -1,18 +1,133 @@
 <html>
     <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/1.2.0/tailwind.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;900&display=swap" rel="stylesheet">
+        <style>
+            body{
+                font-family: 'Roboto', sans-serif !important;
+              }
+        </style>
     </head>
-    <body>
-        <h1>Hola socket.io</h1>
-
-        <div>
-            Usuarios conectados: <span id="count"></span>
+    <body class="bg-gray-300">
+        <div class="container mx-auto px-4 ">
+            <div class="block text-left my-5 ">
+                <h1 class="text-3xl font-bold text-purple-700">Chat</h1>
+            </div>
+            <div  id="chat">
+            </div>
+            <div class="mt-16 text-center absolute" style="bottom: 1em;width: 80%;">
+                <div class="flex shadow rounded bg-white border p-2">
+                    <textarea
+                        id="message-content"
+                        name="message-content"
+                        class="flex-1 py-2 px-3 text-gray-700 focus:outline-none focus:shadow-outline"></textarea>
+                    <button class="bg-purple-500 text-white font-bold rounded border-purple-700 py-2 px-4 border-b-4  ml-4" onclick="emit();">Enviar</button>
+                </div>
+            </div>
         </div>
     </body>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        var socket = io.connect();
-        socket.on("count_updated",function(data){
-            document.querySelector("#count").innerHTML = data.count;
-        })
+        var fakeUserId = ((new Date() * 10000) + 1);
+        // var socket = io.connect(
+        //     window.location.origin,
+        //     {
+        //         query: "loggeduser=#" + fakeUserId
+        //     }
+        // );
+        var socket = io.connect('http://localhost:4000',{reconnect: true});
+        function emit(){
+            var ctrl = document.querySelector("#message-content"); 
+            var message = ctrl.value;
+            if(!message){
+                ctrl.focus();
+            }
+            socket.emit('emitirMensaje', sendMessage());
+        }
+
+        socket.on('recibirMensaje',function(data){
+
+            if(data.name == "User-" + fakeUserId){
+                return;
+            }
+            renderMessage(data);
+        });
+ 
+    </script>
+
+    <script>
+        var user = null;
+
+        var template1 = `
+            <div  class="flex justify-start">
+                <div class=" rounded shadow bg-purple-600 text-white p-4 max-w-md my-5"> 
+                    <div class="" data-name="{{name}}">
+                        {{message}}
+                    </div>
+                </div>
+            </div>`;
+        var template2 = `
+            <div  class="flex justify-end">
+                <div class=" ">
+                    <div class="rounded shadow bg-purple-500 text-white max-w-md p-4 my-5">
+                        <div class="name text-blue-900 font-bold">
+                            {{name}}
+                        </div>
+                        <div >
+                            {{message}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `
+        function sendMessage(){ 
+            var ctrl = document.querySelector("#message-content"); 
+            var message = ctrl.value;
+            if(!message) return;
+
+            var type = "SENT";
+            if(!user){
+                user = fakeUserId;
+            }
+            var name = "User-"+user;
+
+            var data = {
+                message : message,
+                type : type,
+                name : name
+            };
+
+            renderMessage(data);
+
+            ctrl.value = "";
+            ctrl.focus();
+
+            data.type = "RECEIVED"
+
+            return data;
+        }
+
+        //msj que envio
+        function message1(data){
+            return template1.replace("{{message}}",data.message).replace("{{name}}",data.name);
+        }
+
+        //msj que recibo
+        function message2(data){
+            return template2.replace("{{message}}",data.message).replace("{{name}}",data.name);
+        }
+
+        function renderMessage(data){
+            var type = data.type;
+
+            var newMessage = "";
+            if(type == "SENT"){
+                newMessage = message1(data);
+            }else if (type == "RECEIVED"){
+                newMessage = message2(data);
+            }
+            var chat = document.querySelector("#chat");
+            chat.insertAdjacentHTML('beforeend', newMessage);
+        }
     </script>
 </html>

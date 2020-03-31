@@ -13,21 +13,35 @@ app.get('/',function(req,res){
 
 let server = app.listen(4000);
 
+let sockets = {};
 let io = socketio(server);
 
 let userCount = 0;
 
 io.on('connection',function(socket){
+    // let userId = socket.request._query.loggeduser;
+    // if(userId) sockets[userId] = socket;
+
     userCount++;
 
     io.emit('count_updated',{count : userCount});
 
+    socket.on("emitirMensaje",function(data){
+        io.emit("recibirMensaje",data);
+    }) 
     socket.on('disconnect',function(){
+
+        // Object.keys(sockets).forEach(userId=>{
+        //     let s = sockets[userId];
+        //     if(s.id == socket.id ) sockets[userId] = null;
+        // })
+
         userCount--;
         io.emit('count_updated',{count : userCount});
     });
 
 });
+ 
 
 
-
+const client = require("./client");
